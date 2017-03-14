@@ -62,12 +62,12 @@ public class QuorumPeerConfig {
     private static boolean standaloneEnabled = true;
     private static boolean reconfigEnabled = false;
 
-    protected InetSocketAddress clientPortAddress;
-    protected InetSocketAddress secureClientPortAddress;
-    protected File dataDir;
-    protected File dataLogDir;
+    protected InetSocketAddress clientPortAddress; // 处理客户端端口
+    protected InetSocketAddress secureClientPortAddress; // 同上使用安全连接
+    protected File dataDir;  // 快照文件目录
+    protected File dataLogDir; // 日志目录
     protected String dynamicConfigFileStr = null;
-    protected String configFileStr = null;
+    protected String configFileStr = null; // 配置文件
     protected int tickTime = ZooKeeperServer.DEFAULT_TICK_TIME;
     protected int maxClientCnxns = 60;
     /** defaults to -1 if not set explicitly */
@@ -115,7 +115,7 @@ public class QuorumPeerConfig {
      */
     public void parse(String path) throws ConfigException {
         LOG.info("Reading configuration from: " + path);
-       
+       // 将文件转化为Properties
         try {
             File configFile = (new VerifyingFileFactory.Builder(LOG)
                 .warnForRelativePath()
@@ -130,7 +130,7 @@ public class QuorumPeerConfig {
             } finally {
                 in.close();
             }
-            
+            // 将配置转化为对象属性
             parseProperties(cfg);
         } catch (IOException e) {
             throw new ConfigException("Error processing " + path, e);

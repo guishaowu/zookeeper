@@ -29,7 +29,7 @@ import org.apache.zookeeper.server.quorum.QuorumPeer.QuorumServer;
  * identifiers constitutes a quorum.
  *
  */
-
+// 集群节点信息
 public interface QuorumVerifier {
     long getWeight(long id);
     boolean containsQuorum(Set<Long> set);
