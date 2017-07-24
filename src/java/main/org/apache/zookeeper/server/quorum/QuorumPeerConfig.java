@@ -60,6 +60,7 @@ public class QuorumPeerConfig {
     public static final String nextDynamicConfigFileSuffix = ".dynamic.next";
 
     private static boolean standaloneEnabled = true;
+    private static boolean reconfigEnabled = false;
 
     protected InetSocketAddress clientPortAddress;
     protected InetSocketAddress secureClientPortAddress;
@@ -254,6 +255,9 @@ public class QuorumPeerConfig {
                 syncLimit = Integer.parseInt(value);
             } else if (key.equals("electionAlg")) {
                 electionAlg = Integer.parseInt(value);
+                if (electionAlg != 1 && electionAlg != 2 && electionAlg != 3) {
+                    throw new ConfigException("Invalid electionAlg value. Only 1, 2, 3 are supported.");
+                }
             } else if (key.equals("quorumListenOnAllIPs")) {
                 quorumListenOnAllIPs = Boolean.parseBoolean(value);
             } else if (key.equals("peerType")) {
@@ -279,7 +283,15 @@ public class QuorumPeerConfig {
                 } else if (value.toLowerCase().equals("false")) {
                     setStandaloneEnabled(false);
                 } else {
-                    throw new ConfigException("Invalid option for standalone mode. Choose 'true' or 'false.'");
+                    throw new ConfigException("Invalid option " + value + " for standalone mode. Choose 'true' or 'false.'");
+                }
+            } else if (key.equals("reconfigEnabled")) {
+                if (value.toLowerCase().equals("true")) {
+                    setReconfigEnabled(true);
+                } else if (value.toLowerCase().equals("false")) {
+                    setReconfigEnabled(false);
+                } else {
+                    throw new ConfigException("Invalid option " + value + " for reconfigEnabled flag. Choose 'true' or 'false.'");
                 }
             } else if ((key.startsWith("server.") || key.startsWith("group") || key.startsWith("weight")) && zkProp.containsKey("dynamicConfigFile")) {
                 throw new ConfigException("parameter: " + key + " must be in a separate dynamic config file");
@@ -351,8 +363,9 @@ public class QuorumPeerConfig {
         // static configuration params see writeDynamicConfig()
         if (dynamicConfigFileStr == null) {
             setupQuorumPeerConfig(zkProp, true);
-            if (isDistributed()) {
+            if (isDistributed() && isReconfigEnabled()) {
                 // we don't backup static config for standalone mode.
+                // we also don't backup if reconfig feature is disabled.
                 backupOldConfig();
             }
         }
@@ -585,17 +598,12 @@ public class QuorumPeerConfig {
                     LOG.warn("Non-optimial configuration, consider an odd number of servers.");
                 }
             }
-            /*
-             * If using FLE, then every server requires a separate election
-             * port.
-             */            
-           if (eAlg != 0) {
-               for (QuorumServer s : qv.getVotingMembers().values()) {
-                   if (s.electionAddr == null)
-                       throw new IllegalArgumentException(
-                               "Missing election port for server: " + s.id);
-               }
-           }   
+
+            for (QuorumServer s : qv.getVotingMembers().values()) {
+                if (s.electionAddr == null)
+                    throw new IllegalArgumentException(
+                            "Missing election port for server: " + s.id);
+            }
         }
         return qv;
     }
@@ -732,7 +740,13 @@ public class QuorumPeerConfig {
     }
     
     public static void setStandaloneEnabled(boolean enabled) {
-	standaloneEnabled = enabled;
+        standaloneEnabled = enabled;
+    }
+
+    public static boolean isReconfigEnabled() { return reconfigEnabled; }
+
+    public static void setReconfigEnabled(boolean enabled) {
+        reconfigEnabled = enabled;
     }
 
 }

@@ -319,9 +319,9 @@ public class FinalRequestProcessor implements RequestProcessor {
                 if (n == null) {
                     throw new KeeperException.NoNodeException();
                 }
-                PrepRequestProcessor.checkACL(zks, zks.getZKDatabase().aclForNode(n),
+                PrepRequestProcessor.checkACL(zks, request.cnxn, zks.getZKDatabase().aclForNode(n),
                         ZooDefs.Perms.READ,
-                        request.authInfo);
+                        request.authInfo, getDataRequest.getPath(), null);
                 Stat stat = new Stat();
                 byte b[] = zks.getZKDatabase().getData(getDataRequest.getPath(), stat,
                         getDataRequest.getWatch() ? cnxn : null);
@@ -361,9 +361,9 @@ public class FinalRequestProcessor implements RequestProcessor {
                 if (n == null) {
                     throw new KeeperException.NoNodeException();
                 }
-                PrepRequestProcessor.checkACL(zks, zks.getZKDatabase().aclForNode(n),
+                PrepRequestProcessor.checkACL(zks, request.cnxn, zks.getZKDatabase().aclForNode(n),
                         ZooDefs.Perms.READ,
-                        request.authInfo);
+                        request.authInfo, getChildrenRequest.getPath(), null);
                 List<String> children = zks.getZKDatabase().getChildren(
                         getChildrenRequest.getPath(), null, getChildrenRequest
                                 .getWatch() ? cnxn : null);
@@ -380,9 +380,9 @@ public class FinalRequestProcessor implements RequestProcessor {
                 if (n == null) {
                     throw new KeeperException.NoNodeException();
                 }
-                PrepRequestProcessor.checkACL(zks, zks.getZKDatabase().aclForNode(n),
+                PrepRequestProcessor.checkACL(zks, request.cnxn, zks.getZKDatabase().aclForNode(n),
                         ZooDefs.Perms.READ,
-                        request.authInfo);
+                        request.authInfo, getChildren2Request.getPath(), null);
                 List<String> children = zks.getZKDatabase().getChildren(
                         getChildren2Request.getPath(), stat, getChildren2Request
                                 .getWatch() ? cnxn : null);
@@ -399,7 +399,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                         checkWatches.getPath(), type, cnxn);
                 if (!containsWatcher) {
                     String msg = String.format(Locale.ENGLISH, "%s (type: %s)",
-                            new Object[] { checkWatches.getPath(), type });
+                            checkWatches.getPath(), type);
                     throw new KeeperException.NoWatcherException(msg);
                 }
                 break;
@@ -414,7 +414,7 @@ public class FinalRequestProcessor implements RequestProcessor {
                         removeWatches.getPath(), type, cnxn);
                 if (!removed) {
                     String msg = String.format(Locale.ENGLISH, "%s (type: %s)",
-                            new Object[] { removeWatches.getPath(), type });
+                            removeWatches.getPath(), type);
                     throw new KeeperException.NoWatcherException(msg);
                 }
                 break;
