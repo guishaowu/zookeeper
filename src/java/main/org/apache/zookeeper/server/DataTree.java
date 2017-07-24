@@ -223,6 +223,19 @@ public class DataTree {
      */
     private final DataNode quotaDataNode = new DataNode(new byte[0], -1L, new StatPersisted());
 
+    /**
+     * create a /zookeeper/config node for maintaining the configuration (membership and quorum system) info for
+     * zookeeper
+     */
+    private DataNode configDataNode = new DataNode(new byte[0], -1L, new StatPersisted());
+
+    /**
+     * 初始化 添加4个节点
+     * /  根节点
+     * /zookeeper
+     * /zookeeper/quota
+     * /zookeeper/config
+      */
     public DataTree() {
         /* Rather than fight it, let root have an alias */
         nodes.put("", root);

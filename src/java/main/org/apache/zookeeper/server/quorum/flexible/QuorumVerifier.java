@@ -32,11 +32,32 @@ import org.apache.zookeeper.server.quorum.QuorumPeer.QuorumServer;
 // 集群节点信息
 public interface QuorumVerifier {
     long getWeight(long id);
+
+    /**
+     * 校验set的所有成员能否构成一个法定人数（合理投票）
+     * @param set
+     * @return
+     */
     boolean containsQuorum(Set<Long> set);
     long getVersion();
     void setVersion(long ver);
+
+    /**
+     * 所有成员
+     * @return
+     */
     Map<Long, QuorumServer> getAllMembers();
+
+    /**
+     * 所有投票成员
+     * @return
+     */
     Map<Long, QuorumServer> getVotingMembers();
+
+    /**
+     * 观察者
+     * @return
+     */
     Map<Long, QuorumServer> getObservingMembers();
     boolean equals(Object o);
     String toString();

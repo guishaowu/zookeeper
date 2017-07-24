@@ -768,8 +768,8 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
         if (!getView().containsKey(myid)) {
             throw new RuntimeException("My id " + myid + " not in the peer list");
          }
-        loadDataBase();
-        startServerCnxnFactory();
+        loadDataBase();  // 加载数据和节点信息
+        startServerCnxnFactory();  // 默认NIOServer
         try {
             adminServer.start();
         } catch (AdminServerException e) {
@@ -777,11 +777,15 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
             System.out.println(e);
         }
         startLeaderElection();
-        super.start();
+        super.start();  // 执行run方法
     }
 
+    /**
+     * 加载数据库，获取节点时间信息（epoch），
+     */
     private void loadDataBase() {
         try {
+            // 从硬盘读取快照，加载数据
             zkDb.loadDataBase();
 
             // load the epochs
@@ -1032,7 +1036,7 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
              */
             while (running) {
                 switch (getPeerState()) {
-                case LOOKING:
+                case LOOKING: // 选举
                     LOG.info("LOOKING");
 
                     if (Boolean.getBoolean("readonlymode.enabled")) {

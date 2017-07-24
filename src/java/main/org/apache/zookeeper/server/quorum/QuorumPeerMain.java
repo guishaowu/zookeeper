@@ -105,21 +105,23 @@ public class QuorumPeerMain {
     protected void initializeAndRun(String[] args)
         throws ConfigException, IOException, AdminServerException
     {
-        // 配置
+        // 配置，从配置文件转为Config的属性值
         QuorumPeerConfig config = new QuorumPeerConfig();
         if (args.length == 1) {
             config.parse(args[0]);
         }
 
-        // Start and schedule the the purge task  删除日志和快照
+        // Start and schedule the the purge task  删除transaction日志和快照
         DatadirCleanupManager purgeMgr = new DatadirCleanupManager(config
                 .getDataDir(), config.getDataLogDir(), config
                 .getSnapRetainCount(), config.getPurgeInterval());
         purgeMgr.start();
 
         if (args.length == 1 && config.isDistributed()) {
+            // 分布式模式启动
             runFromConfig(config);
         } else {
+            // 单节点模式启动
             LOG.warn("Either no config or no quorum defined in config, running "
                     + " in standalone mode");
             // there is only server in the quorum -- run as standalone
@@ -143,6 +145,7 @@ public class QuorumPeerMain {
 
           if (config.getClientPortAddress() != null) {
               cnxnFactory = ServerCnxnFactory.createFactory();
+              //初始化Server
               cnxnFactory.configure(config.getClientPortAddress(),
                       config.getMaxClientCnxns(),
                       false);
@@ -156,6 +159,8 @@ public class QuorumPeerMain {
           }
 
           quorumPeer = getQuorumPeer();
+          // 设置端点的属性，启动服务
+          //新建FileTxnSnapLog对象（FileTxnLog  FileSnapLog)
           quorumPeer.setTxnFactory(new FileTxnSnapLog(
                       config.getDataLogDir(),
                       config.getDataDir()));
@@ -163,11 +168,11 @@ public class QuorumPeerMain {
           quorumPeer.enableLocalSessionsUpgrading(
               config.isLocalSessionsUpgradingEnabled());
           //quorumPeer.setQuorumPeers(config.getAllMembers());
-          quorumPeer.setElectionType(config.getElectionAlg());
-          quorumPeer.setMyid(config.getServerId());
+          quorumPeer.setElectionType(config.getElectionAlg());  // 选举算法,默认为3
+          quorumPeer.setMyid(config.getServerId());  // server 编号
           quorumPeer.setTickTime(config.getTickTime());
-          quorumPeer.setMinSessionTimeout(config.getMinSessionTimeout());
-          quorumPeer.setMaxSessionTimeout(config.getMaxSessionTimeout());
+          quorumPeer.setMinSessionTimeout(config.getMinSessionTimeout()); // 默认 tickTime * 2
+          quorumPeer.setMaxSessionTimeout(config.getMaxSessionTimeout()); // 默认tickTime * 20
           quorumPeer.setInitLimit(config.getInitLimit());
           quorumPeer.setSyncLimit(config.getSyncLimit());
           quorumPeer.setConfigFileName(config.getConfigFilename());
@@ -176,7 +181,7 @@ public class QuorumPeerMain {
           if (config.getLastSeenQuorumVerifier()!=null) {
               quorumPeer.setLastSeenQuorumVerifier(config.getLastSeenQuorumVerifier(), false);
           }
-          quorumPeer.initConfigInZKDatabase();
+          quorumPeer.initConfigInZKDatabase(); // 初始化zkDB的配置节点
           quorumPeer.setCnxnFactory(cnxnFactory);
           quorumPeer.setSecureCnxnFactory(secureCnxnFactory);
           quorumPeer.setLearnerType(config.getPeerType());

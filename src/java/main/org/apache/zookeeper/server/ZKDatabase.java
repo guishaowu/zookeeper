@@ -64,6 +64,11 @@ import org.slf4j.LoggerFactory;
  * and snapshots from the disk.
  */
 public class ZKDatabase {
+    /*
+       1 数据库
+       2 session 过期
+       3 快照日志
+     */
 
     private static final Logger LOG = LoggerFactory.getLogger(ZKDatabase.class);
 
@@ -222,7 +227,7 @@ public class ZKDatabase {
             }
         };
 
-        long zxid = snapLog.restore(dataTree,sessionsWithTimeouts,listener);
+        long zxid = snapLog.restore(dataTree,sessionsWithTimeouts,listener); //空库返回0
         initialized = true;
         return zxid;
     }

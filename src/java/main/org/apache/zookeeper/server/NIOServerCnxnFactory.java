@@ -178,6 +178,8 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory {
      * them across the SelectorThreads. It enforces maximum number of
      * connections per IP and attempts to cope with running out of file
      * descriptors by briefly sleeping before retrying.
+     *
+     * 接受客户端连接，将连接转给SelectorThreads,保证每个ip的最大连接数，
      */
     private class AcceptThread extends AbstractSelectThread {
         private final ServerSocketChannel acceptSocket;
@@ -338,6 +340,7 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory {
      *
      * If there is no worker thread pool, the SelectorThread performs the I/O
      * directly.
+     * 接受AcceptThread的连接，绑定到Selector上，处理连接的I/O读写
      */
     class SelectorThread extends AbstractSelectThread {
         private final int id;
@@ -508,6 +511,8 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory {
     /**
      * IOWorkRequest is a small wrapper class to allow doIO() calls to be
      * run on a connection using a WorkerService.
+     *
+     * 封装I/O 请求，丢给worker线程池
      */
     private class IOWorkRequest extends WorkerService.WorkRequest {
         private final SelectorThread selectorThread;
@@ -639,6 +644,9 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory {
         new HashSet<SelectorThread>();
 
     @Override
+    /**
+     * 初始化，初始化3种线程
+     */
     public void configure(InetSocketAddress addr, int maxcc, boolean secure) throws IOException {
         if (secure) {
             throw new UnsupportedOperationException("SSL isn't supported in NIOServerCnxn");
@@ -747,9 +755,11 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory {
             }
         }
         // ensure thread is started once and only once
+        // 接受客户端连接，将连接转给SelectorThreads,保证每个ip的最大连接数，
         if (acceptThread.getState() == Thread.State.NEW) {
             acceptThread.start();
         }
+        //处理连接过期
         if (expirerThread.getState() == Thread.State.NEW) {
             expirerThread.start();
         }
@@ -808,6 +818,7 @@ public class NIOServerCnxnFactory extends ServerCnxnFactory {
     }
 
     /**
+     * 更新连接的过期时间
      * Add or update cnxn in our cnxnExpiryQueue
      * @param cnxn
      */

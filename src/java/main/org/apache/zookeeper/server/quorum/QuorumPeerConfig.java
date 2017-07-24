@@ -68,29 +68,30 @@ public class QuorumPeerConfig {
     protected File dataLogDir; // 日志目录
     protected String dynamicConfigFileStr = null;
     protected String configFileStr = null; // 配置文件
-    protected int tickTime = ZooKeeperServer.DEFAULT_TICK_TIME;
+    protected int tickTime = ZooKeeperServer.DEFAULT_TICK_TIME; //
     protected int maxClientCnxns = 60;
     /** defaults to -1 if not set explicitly */
     protected int minSessionTimeout = -1;
     /** defaults to -1 if not set explicitly */
-    protected int maxSessionTimeout = -1;
+    protected int maxSessionTimeout = -1; // session 过期时间，默认tickTime * 20
     protected boolean localSessionsEnabled = false;
     protected boolean localSessionsUpgradingEnabled = false;
 
-    protected int initLimit;
-    protected int syncLimit;
-    protected int electionAlg = 3;
-    protected int electionPort = 2182;
+    protected int initLimit;  //todo 初始化？时间限制
+    protected int syncLimit;   // todo 同步？时间限制
+    protected int electionAlg = 3; // 选举算法
+    protected int electionPort = 2182;// 选举端口
     protected boolean quorumListenOnAllIPs = false;
 
-    protected long serverId = UNSET_SERVERID;
+    protected long serverId = UNSET_SERVERID;// 集群中server的编号
 
-    protected QuorumVerifier quorumVerifier = null, lastSeenQuorumVerifier = null;
-    protected int snapRetainCount = 3;
-    protected int purgeInterval = 0;
+    protected QuorumVerifier quorumVerifier = null ;   // 有group的配置为QuorumHierarchical ,没有为QuorumMaj
+    protected QuorumVerifier lastSeenQuorumVerifier = null; //todo 集群所有节点信息
+    protected int snapRetainCount = 3;// 保留最近的几次快照
+    protected int purgeInterval = 0; // 删除快照的时间间隔 单位小时
     protected boolean syncEnabled = true;
 
-    protected LearnerType peerType = LearnerType.PARTICIPANT;
+    protected LearnerType peerType = LearnerType.PARTICIPANT; // 服务器角色
 
     /**
      * Minimum snapshot retain count.
@@ -550,7 +551,7 @@ public class QuorumPeerConfig {
 
     /**
      * Parse dynamic configuration file and return
-     * quorumVerifier for new configuration.
+     * quorumVerifier for new configuration. 创建QuorumVerifier(QuorumMaj or QuorumHierarchical)
      * @param dynamicConfigProp Properties to parse from.
      * @throws IOException
      * @throws ConfigException
@@ -608,6 +609,10 @@ public class QuorumPeerConfig {
         return qv;
     }
 
+    /**
+     * 根据配置，读取myid配置文件内容，设置serverId
+     * @throws IOException
+     */
     private void setupMyId() throws IOException {
         File myIdFile = new File(dataDir, "myid");
         // standalone server doesn't need myid file.
@@ -630,6 +635,10 @@ public class QuorumPeerConfig {
         }
     }
 
+    /**
+     * 根据配置文件中的server列表和自己的serverId设置client端口（检查端口）
+     * @throws ConfigException
+     */
     private void setupClientPort() throws ConfigException {
         if (serverId == UNSET_SERVERID) {
             return;
@@ -647,6 +656,9 @@ public class QuorumPeerConfig {
         if (qs != null && qs.clientAddr != null) clientPortAddress = qs.clientAddr;
     }
 
+    /**
+     * 根据配置文件中的server列表和自己的serverId设置服务器角色
+     */
     private void setupPeerType() {
         // Warn about inconsistent peer type
         LearnerType roleByServersList = quorumVerifier.getObservingMembers().containsKey(serverId) ? LearnerType.OBSERVER
@@ -660,6 +672,11 @@ public class QuorumPeerConfig {
         }
     }
 
+    /**
+     * 检验参数
+     * @throws IOException
+     * @throws ConfigException
+     */
     public void checkValidity() throws IOException, ConfigException{
         if (isDistributed()) {
             if (initLimit == 0) {

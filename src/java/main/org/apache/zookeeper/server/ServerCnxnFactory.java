@@ -76,6 +76,13 @@ public abstract class ServerCnxnFactory {
         configure(addr, maxcc, false);
     }
 
+    /**
+     * 初始化，在QuorumPeerMain中调用
+     * @param addr
+     * @param maxcc
+     * @param secure
+     * @throws IOException
+     */
     public abstract void configure(InetSocketAddress addr, int maxcc, boolean secure)
             throws IOException;
 

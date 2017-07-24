@@ -49,6 +49,17 @@ import org.slf4j.LoggerFactory;
  * There are a few parameters that can be tuned to change its behavior. First,
  * finalizeWait determines the amount of time to wait until deciding upon a leader.
  * This is part of the leader election algorithm.
+ *
+ * 两个线程 sender  和 receiver
+ * 两个队列，发送消息和接收消息
+ * sender负责将要发送消息的队列中的内容转给QuorumCnxManager的消息队列
+ * receiver 负责从QuorumCnxManager的接收消息队列中取出消息，根据消息内容作处理，处理流程如下
+ * 如果QuorumVerifier变化则关闭选举，重启启动选举（成员变化）
+ * 如果为looking状态，将接收到的投票放入接收队列，
+ * 如果为非looking状态，而投票者为looking状态，将自己的投票发送给对方
+ *
+ * 选举流程
+ *
  */
 
 
@@ -650,6 +661,10 @@ public class FastLeaderElection implements Election {
     }
 
     volatile boolean stop;
+
+    /**
+     * 关闭投票
+     */
     public void shutdown(){
         stop = true;
         proposedLeader = -1;
@@ -663,6 +678,7 @@ public class FastLeaderElection implements Election {
 
     /**
      * Send notifications to all peers upon a change in our vote
+     * 给所有的成员发送投票信息（将投票信息放入发送消息队列）
      */
     private void sendNotifications() {
         for (long sid : self.getCurrentAndNextConfigVoters()) {
@@ -684,6 +700,10 @@ public class FastLeaderElection implements Election {
         }
     }
 
+    /**
+     * 日志输出投票信息
+     * @param n
+     */
     private void printNotification(Notification n){
         LOG.info("Notification: "
                 + Long.toHexString(n.version) + " (message format version), "
@@ -727,7 +747,8 @@ public class FastLeaderElection implements Election {
     /**
      * Termination predicate. Given a set of votes, determines if have
      * sufficient to declare the end of the election round.
-     * 
+     *
+     *  检查头投票是否可以结束，依据当前的投票信息，检查收到的投票
      * @param votes
      *            Set of votes
      * @param vote
@@ -790,6 +811,12 @@ public class FastLeaderElection implements Election {
         return predicate;
     }
 
+    /**
+     * 更新下一次投票信息
+     * @param leader 选举的leader 的sid
+     * @param zxid   选举的zxid
+     * @param epoch  选举的epoch
+     */
     synchronized void updateProposal(long leader, long zxid, long epoch){
         if(LOG.isDebugEnabled()){
             LOG.debug("Updating proposal: " + leader + " (newleader), 0x"
@@ -866,6 +893,29 @@ public class FastLeaderElection implements Election {
      * Starts a new round of leader election. Whenever our QuorumPeer
      * changes its state to LOOKING, this method is invoked, and it
      * sends notifications to all other peers.
+     * 1 初始化投票信息
+     * 2 给所有成员发送投票信息
+     * 3 循环 不是looking状态或者已经收到停止信号（stop)
+     *     1) 从revQueue中取出消息
+     *            1-1）没有消息，是否有消息未发送，如果有则发起一次连接所有成员，如果没有则给所有成员发送投票消息
+     *            1-2）有消息，且消息发送者在投票成员中，根据消息发送者状态处理
+     *                 1-2-1）looking
+     *                        1-2-1-1)投票信息中的选举时间为当前的大，
+     *                                更新选举时间，清空receiveSEt
+     *                                如果投票信息比自己的更优，更新自己的投票信息,否则使用初始化的信息更新投票信息
+     *                                给所有成员发送投票信息
+     *                        1-2-1-2)选举时间比自己的小，忽略消息,break
+     *                        1-2-1-3)投票信息比自己更优，更新投票信息，给所有成语发送投票消息
+     *                        将消息放入receiveSet
+     *                        检查是否可以结束投票
+     *                              1)可以结束，取出receiveQueue中所有的消息，与当前投票是否有冲突，
+     *                                        如果没有冲突设置当前端的状态为leader或者follower(observer)
+     *                 1-2-2)observing 忽略
+     *                 1-2-3）following 或者leading
+     *                        如果投票时间等于当前节点投票时间,将投票信息放入receiveSet中，如果检查可以结束，
+     *                           设置当前节点的状态清空收到的消息队列,返回
+     *
+     *            1-3)有消息，消息发送者不再可投票成员中，忽略此消息
      */
     public Vote lookForLeader() throws InterruptedException {
         try {
@@ -893,6 +943,7 @@ public class FastLeaderElection implements Election {
 
             LOG.info("New election. My id =  " + self.getId() +
                     ", proposed zxid=0x" + Long.toHexString(proposedZxid));
+            // 给所有成员发送选举投票
             sendNotifications();
 
             /*

@@ -140,6 +140,10 @@ public class DataNode implements Record {
         return data.length;
     }
 
+    /**
+     * 将自己的Stat的信息复制到给定的Stat上
+     * @param to
+     */
     synchronized public void copyStat(Stat to) {
         to.setAversion(stat.getAversion());
         to.setCtime(stat.getCtime());

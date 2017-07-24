@@ -115,8 +115,11 @@ public abstract class ServerCnxn implements Stats, Watcher {
         }
     }
 
+    /**
+     * 统计计数
+     */
     protected void packetReceived() {
-        incrPacketsReceived();
+        incrPacketsReceived();// 计数
         ServerStats serverStats = serverStats();
         if (serverStats != null) {
             serverStats().incrementPacketsReceived();

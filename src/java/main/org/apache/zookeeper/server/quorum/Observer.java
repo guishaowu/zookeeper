@@ -36,6 +36,7 @@ import org.apache.zookeeper.txn.TxnHeader;
  * therefore naturally act as a relay point for publishing the proposal stream
  * and can relieve Followers of some of the connection load. Observers may
  * submit proposals, but do not vote in their acceptance.
+ * 连接到Leader后，接收leader的消息，处理
  *
  * See ZOOKEEPER-368 for a discussion of this feature.
  */

@@ -296,6 +296,7 @@ public class Leader {
 
     /**
      * This message type is sent by a leader to propose a mutation.
+     *  发起一个提议
      */
     public final static int PROPOSAL = 2;
 
@@ -329,6 +330,7 @@ public class Leader {
 
     /**
      * This message type informs observers of a committed proposal.
+     * 通知给观察者，已经提交的提议
      */
     final static int INFORM = 8;
     

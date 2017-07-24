@@ -47,11 +47,13 @@ import org.slf4j.LoggerFactory;
  * maintains one connection for every pair of servers. The tricky part is to
  * guarantee that there is exactly one connection for every pair of servers that
  * are operating correctly and that can communicate over the network.
- * 
+ * 每个成员之间建立一个连接，如果同时建立连接关闭其中一个，关闭算法
  * If two servers try to start a connection concurrently, then the connection
  * manager uses a very simple tie-breaking mechanism to decide which connection
  * to drop based on the IP addressed of the two parties. 
- * 
+ *
+ * 对每一个成员维持一个send message 的队列, sender 负责发送队列中的消息。
+ * receiver 负责某一个成员的接收消息，将消息内容放入receive队列 ,由FastLeaderElection的Receiver线程消费
  * For every peer, the manager maintains a queue of messages to send. If the
  * connection to any particular peer drops, then the sender thread puts the
  * message back on the list. As this implementation currently uses a queue
@@ -59,7 +61,7 @@ import org.slf4j.LoggerFactory;
  * message to the tail of the queue, thus changing the order of messages.
  * Although this is not a problem for the leader election, it could be a problem
  * when consolidating peer communication. This is to be verified, though.
- * 
+ *  选举连接管理 ， Listener监听选举端口
  */
 
 public class QuorumCnxManager {
@@ -310,6 +312,7 @@ public class QuorumCnxManager {
      * to this server already or not. If it does, then it sends the smallest
      * possible long value to lose the challenge.
      *
+     *每个成员之间有且只有一个连接
      */
     public void receiveConnection(Socket sock) {
         Long sid = null, protocolVersion = null;

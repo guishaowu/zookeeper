@@ -54,6 +54,7 @@ import org.slf4j.LoggerFactory;
 /**
  * This class handles communication with clients using NIO. There is one per
  * client, but only one thread doing the communication.
+ * 处理读写数据的细节
  */
 public class NIOServerCnxn extends ServerCnxn {
     private static final Logger LOG = LoggerFactory.getLogger(NIOServerCnxn.class);
@@ -173,9 +174,10 @@ public class NIOServerCnxn extends ServerCnxn {
         }
 
         if (incomingBuffer.remaining() == 0) { // have we read length bytes?
-            packetReceived();
-            incomingBuffer.flip();
+            packetReceived(); // 计数统计
+            incomingBuffer.flip(); //
             if (!initialized) {
+                // 初始化连接，设置会话id,设置会话超时
                 readConnectRequest();
             } else {
                 readRequest();
@@ -308,6 +310,7 @@ public class NIOServerCnxn extends ServerCnxn {
 
     /**
      * Handles read/write IO on connection.
+     * 处理连接的I/O细节
      */
     void doIO(SelectionKey k) throws InterruptedException {
         try {
@@ -329,6 +332,7 @@ public class NIOServerCnxn extends ServerCnxn {
                     boolean isPayload;
                     if (incomingBuffer == lenBuffer) { // start of next request
                         incomingBuffer.flip();
+                        // 前四个字节是否表示一个数据长度，有可能表示一个命令（4个字符的命令）
                         isPayload = readLength(k);
                         incomingBuffer.clear();
                     } else {
@@ -376,6 +380,10 @@ public class NIOServerCnxn extends ServerCnxn {
         }
     }
 
+    /**
+     * 处理请求,将请求交给zkServer处理
+     * @throws IOException
+     */
     private void readRequest() throws IOException {
         zkServer.processPacket(this, incomingBuffer);
     }
