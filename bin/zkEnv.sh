@@ -72,7 +72,7 @@ fi
 
 if [ "x${ZOO_LOG4J_PROP}" = "x" ]
 then
-    ZOO_LOG4J_PROP="INFO,CONSOLE"
+    ZOO_LOG4J_PROP="DEBUG,CONSOLE"
 fi
 
 if [[ -n "$JAVA_HOME" ]] && [[ -x "$JAVA_HOME/bin/java" ]];  then
