@@ -283,6 +283,7 @@ public class QuorumCnxManager {
             closeSocket(sock);
             // Otherwise proceed with the connection
         } else {
+            LOG.debug("Initiating connection success. myself:{} to sid:{}", self.getId(), sid);
             SendWorker sw = new SendWorker(sock, sid);
             RecvWorker rw = new RecvWorker(sock, sid, sw);
             sw.setRecv(rw);
@@ -399,6 +400,7 @@ public class QuorumCnxManager {
     /**
      * Processes invoke this message to queue a message to send. Currently, 
      * only leader election uses it.
+     * 添加消息到对应的发送队列，并创建连接
      */
     public void toSend(Long sid, ByteBuffer b) {
         /*
@@ -438,7 +440,7 @@ public class QuorumCnxManager {
             LOG.debug("There is a connection already for server " + sid);
             return true;
         }
-
+        LOG.debug("Create a connection to server:{} with address", sid);
         Socket sock = null;
         try {
              LOG.debug("Opening channel to server " + sid);
@@ -936,7 +938,7 @@ public class QuorumCnxManager {
      * Inserts an element in the specified queue. If the Queue is full, this
      * method removes an element from the head of the Queue and then inserts
      * the element at the tail. It can happen that the an element is removed
-     * by another thread in {@link SendWorker#processMessage() processMessage}
+     * by another thread in {@link SendWorker#run() processMessage}
      * method before this method attempts to remove an element from the queue.
      * This will cause {@link ArrayBlockingQueue#remove() remove} to throw an
      * exception, which is safe to ignore.
