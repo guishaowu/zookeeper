@@ -776,8 +776,9 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
             LOG.warn("Problem starting AdminServer", e);
             System.out.println(e);
         }
+        // 启动选举
         startLeaderElection();
-        super.start();  // 执行run方法
+        super.start();  // 继承了thread,执行run方法
     }
 
     /**
@@ -950,6 +951,7 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
                 le = new AuthFastLeaderElection(this, true);
                 break;
             case 3:
+                LOG.debug("Initiating LeaderElection.");
                 qcm = new QuorumCnxManager(this);
                 QuorumCnxManager.Listener listener = qcm.listener;
                 if(listener != null){
@@ -1037,7 +1039,7 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
             while (running) {
                 switch (getPeerState()) {
                 case LOOKING: // 选举
-                    LOG.info("LOOKING");
+                    LOG.info("The State of Quorum is LOOKING");
 
                     if (Boolean.getBoolean("readonlymode.enabled")) {
                         LOG.info("Attempting to start ReadOnlyZooKeeperServer");
@@ -1070,6 +1072,7 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
                         try {
                             roZkMgr.start();
                             reconfigFlagClear();
+                            LOG.debug("begin start looking for leader. shuttingDonwLe:{}", shuttingDownLE);
                             if (shuttingDownLE) {
                                 shuttingDownLE = false;
                                 startLeaderElection();

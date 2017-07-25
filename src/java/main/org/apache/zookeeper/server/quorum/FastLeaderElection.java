@@ -918,6 +918,7 @@ public class FastLeaderElection implements Election {
      *            1-3)有消息，消息发送者不再可投票成员中，忽略此消息
      */
     public Vote lookForLeader() throws InterruptedException {
+        LOG.debug("Starting looking for leader.");
         try {
             self.jmxLeaderElectionBean = new LeaderElectionBean();
             MBeanRegistry.getInstance().register(
