@@ -1072,7 +1072,7 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
                         try {
                             roZkMgr.start();
                             reconfigFlagClear();
-                            LOG.debug("begin start looking for leader. shuttingDonwLe:{}", shuttingDownLE);
+                            LOG.debug("begin start looking for leader. shuttingDownLe:{}", shuttingDownLE);
                             if (shuttingDownLE) {
                                 shuttingDownLE = false;
                                 startLeaderElection();

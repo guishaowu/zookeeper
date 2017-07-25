@@ -477,6 +477,7 @@ public class QuorumCnxManager {
             LOG.debug("There is a connection already for server " + sid);
             return;
         }
+        LOG.debug("create a connection to sid:{}.", sid);
         synchronized (self.QV_LOCK) {
             boolean knownId = false;
             // Resolve hostname for the remote server before attempting to
