@@ -350,6 +350,9 @@ public class Leader {
 
     private final Proposal newLeaderProposal = new Proposal();
 
+    /**
+     * 处理Learner的连接
+     */
     class LearnerCnxAcceptor extends ZooKeeperCriticalThread {
         private volatile boolean stop = false;
 

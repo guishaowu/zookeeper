@@ -65,7 +65,10 @@ public class Learner {
     LearnerZooKeeperServer zk;
     
     protected BufferedOutputStream bufferedOutput;
-    
+
+    /**
+     * 与leader的连接
+     */
     protected Socket sock;
     
     /**
@@ -75,9 +78,15 @@ public class Learner {
     public Socket getSocket() {
         return sock;
     }
-    
+
+    /**
+     * 与leader连接的InputStream
+     */
     protected InputArchive leaderIs;
-    protected OutputArchive leaderOs;  
+    /**
+     * 与leader连接的OutputStream
+     */
+    protected OutputArchive leaderOs;
     /** the protocol version of the leader */
     protected int leaderProtocolVersion = 0x01;
     
@@ -207,6 +216,7 @@ public class Learner {
             LOG.warn("Couldn't find the leader with id = "
                     + current.getId());
         }
+        LOG.debug("find leader address: {}", addr);
         return addr;
     }
    

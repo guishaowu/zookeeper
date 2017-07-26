@@ -73,7 +73,9 @@ public class Follower extends Learner{
         try {
             InetSocketAddress addr = findLeader();            
             try {
+                LOG.debug("Connecting to leader.");
                 connectToLeader(addr);
+                LOG.debug("Connected to leader.");
                 long newEpochZxid = registerWithLeader(Leader.FOLLOWERINFO);
                 if (self.isReconfigStateChange())
                    throw new Exception("learned about role change");
