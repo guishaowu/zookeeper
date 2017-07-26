@@ -1238,6 +1238,10 @@ public class QuorumPeer extends ZooKeeperThread implements QuorumStats.Provider 
        return getQuorumVerifier().getObservingMembers();
     }
 
+    /**
+     * 获取所有投票成员的id
+     * @return
+     */
     public synchronized Set<Long> getCurrentAndNextConfigVoters() {
         Set<Long> voterIds = new HashSet<Long>(getQuorumVerifier()
                 .getVotingMembers().keySet());

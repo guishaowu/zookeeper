@@ -821,7 +821,7 @@ public class FastLeaderElection implements Election {
         if(LOG.isDebugEnabled()){
             LOG.debug("Updating proposal: " + leader + " (newleader), 0x"
                     + Long.toHexString(zxid) + " (newzxid), " + proposedLeader
-                    + " (oldleader), 0x" + Long.toHexString(proposedZxid) + " (oldzxid)");
+                    + " (oldleader), 0x" + Long.toHexString(proposedZxid) + " (oldzxid)," + epoch + " (newpoch)," + proposedEpoch + " (oldEpoch)");
         }
         proposedLeader = leader;
         proposedZxid = zxid;
@@ -900,20 +900,21 @@ public class FastLeaderElection implements Election {
      *            1-1）没有消息，是否有消息未发送，如果有则发起一次连接所有成员，如果没有则给所有成员发送投票消息
      *            1-2）有消息，且消息发送者在投票成员中，根据消息发送者状态处理
      *                 1-2-1）looking
-     *                        1-2-1-1)投票信息中的选举时间为当前的大，
-     *                                更新选举时间，清空receiveSEt
-     *                                如果投票信息比自己的更优，更新自己的投票信息,否则使用初始化的信息更新投票信息
-     *                                给所有成员发送投票信息
+     *                        （1）
+     *                        1-2-1-1)投票信息中的选举时间比当前的大，
+     *                                   (1)更新选举时间，清空receiveSet
+     *                                   (2)如果投票信息比自己的更优，使用notification更新自己的投票信息,否则使用初始化的信息更新投票信息
+     *                                   (3)给所有成员发送投票信息
      *                        1-2-1-2)选举时间比自己的小，忽略消息,break
-     *                        1-2-1-3)投票信息比自己更优，更新投票信息，给所有成语发送投票消息
-     *                        将消息放入receiveSet
-     *                        检查是否可以结束投票
+     *                        1-2-1-3)选举时间一致，投票信息比自己更优，使用notification更新投票信息，给所有成语发送投票消息
+     *                        （2）将消息放入receiveSet
+     *                        （3）检查是否可以结束投票，可以结束
      *                              1)可以结束，取出receiveQueue中所有的消息，与当前投票是否有冲突，
-     *                                        如果没有冲突设置当前端的状态为leader或者follower(observer)
+     *                                        如果没有冲突设置当前端的状态为leader或者follower(observer)，清空收到消息队列，返回最终投票结果
      *                 1-2-2)observing 忽略
      *                 1-2-3）following 或者leading
      *                        如果投票时间等于当前节点投票时间,将投票信息放入receiveSet中，如果检查可以结束，
-     *                           设置当前节点的状态清空收到的消息队列,返回
+     *                           设置当前节点的状态，清空收到的消息队列,返回最终投票结果
      *
      *            1-3)有消息，消息发送者不再可投票成员中，忽略此消息
      */

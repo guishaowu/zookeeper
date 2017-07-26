@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
  * maintains one connection for every pair of servers. The tricky part is to
  * guarantee that there is exactly one connection for every pair of servers that
  * are operating correctly and that can communicate over the network.
- * 每个成员之间建立一个连接，如果同时建立连接关闭其中一个，关闭算法
+ * 每个成员之间建立一个连接，如果同时建立连接关闭其中一个，关闭算法 可以存在的连接是从id较大的到较小的
  * If two servers try to start a connection concurrently, then the connection
  * manager uses a very simple tie-breaking mechanism to decide which connection
  * to drop based on the IP addressed of the two parties. 
